@@ -1,17 +1,10 @@
-import path from 'path';
-import fs from 'fs/promises';
+import allJobs from './jobs.json' assert { type: 'json' };
 
 export default async function handler(request, response) {
   const { platform } = request.query;
 
-  // CAMBIO CLAVE: La API ahora busca el archivo en su propio directorio.
-  // process.cwd() en una función de Vercel apunta a /var/task, y el archivo estará en /var/task/api/jobs.json
-  const jsonPath = path.join(process.cwd(), 'api', 'jobs.json');
-
   try {
-    const jsonData = await fs.readFile(jsonPath, 'utf-8');
-    const allJobs = JSON.parse(jsonData);
-
+    // Los datos ahora vienen del archivo importado, no de una lectura del sistema.
     if (!platform || !allJobs[platform]) {
       return response.status(400).json({ error: 'Plataforma no válida o no especificada.' });
     }
@@ -22,9 +15,10 @@ export default async function handler(request, response) {
     return response.status(200).json(platformJobs);
 
   } catch (error) {
-    console.error('Error al leer el archivo jobs.json:', error);
+    // Este error ahora solo ocurriría si el JSON está malformado.
+    console.error('Error al procesar el archivo jobs.json importado:', error);
     return response.status(500).json({ 
-      error: 'No se encontraron datos de vacantes. El proceso de scraping pudo haber fallado durante el despliegue.' 
+      error: 'No se pudieron procesar los datos de las vacantes.' 
     });
   }
 }
