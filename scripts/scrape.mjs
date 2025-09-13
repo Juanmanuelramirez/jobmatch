@@ -7,7 +7,7 @@ import path from 'path';
 // --- Constantes y Configuración ---
 console.log('--- Iniciando script de scraping y análisis ---');
 const CV_SUMMARY = `Strategic Program Manager with over 10 years of experience in global cloud initiatives (AWS, GCP), Agile transformation (Scrum, SAFe), and leading cross-functional teams. Expert in cloud migrations, CI/CD automation, and cloud governance. Certified AWS Solutions Architect and Scrum Master.`;
-const OUTPUT_DIR = path.join(process.cwd(), 'public');
+const OUTPUT_DIR = path.join(process.cwd(), 'api'); // <-- CAMBIO CLAVE: Guardar dentro de /api
 const OUTPUT_FILE = path.join(OUTPUT_DIR, 'jobs.json');
 
 // --- Lógica de IA ---
