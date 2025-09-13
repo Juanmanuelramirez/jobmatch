@@ -1,4 +1,4 @@
-import allJobs from './jobs.json' assert { type: 'json' };
+import allJobs from './jobs.json' with { type: 'json' };
 
 export default async function handler(request, response) {
   const { platform } = request.query;
