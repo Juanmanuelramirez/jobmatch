@@ -1,5 +1,5 @@
 import puppeteer from 'puppeteer-core';
-import chromium from 'chrome-aws-lambda';
+import chromium from '@sparticuz/chromium';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -58,11 +58,16 @@ async function scrapeAndProcess() {
   };
 
   try {
+    // CAMBIO CRÍTICO: Usando la nueva librería @sparticuz/chromium
     browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(), // Ahora es una función
       headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     });
+
+    console.log('Navegador lanzado con éxito.');
 
     allJobs.occ = await scrapeOCC(browser);
     allJobs.computrabajo = await scrapeComputrabajo(browser);
@@ -75,6 +80,7 @@ async function scrapeAndProcess() {
   } finally {
     if (browser) {
       await browser.close();
+      console.log('Navegador cerrado.');
     }
   }
 }
@@ -82,6 +88,7 @@ async function scrapeAndProcess() {
 // --- SCRAPERS INDIVIDUALES (SIN CAMBIOS) ---
 async function scrapeOCC(browser) {
   const platform = 'OCCMundial';
+  console.log(`Iniciando scraping de ${platform}...`);
   const page = await browser.newPage();
   await page.goto('https://www.occ.com.mx/empleos/de-program-manager/remoto/', { waitUntil: 'networkidle2' });
   const jobs = await page.evaluate(() => {
@@ -92,11 +99,13 @@ async function scrapeOCC(browser) {
     }));
   });
   await page.close();
+  console.log(`Scraping de ${platform} completado.`);
   return generatePersonalizedMessages(jobs, CV_SUMMARY);
 }
 
 async function scrapeComputrabajo(browser) {
   const platform = 'Computrabajo';
+  console.log(`Iniciando scraping de ${platform}...`);
   const page = await browser.newPage();
   await page.goto('https://mx.computrabajo.com/trabajo-de-program-manager-en-remoto', { waitUntil: 'networkidle2' });
   const jobs = await page.evaluate(() => {
@@ -107,6 +116,7 @@ async function scrapeComputrabajo(browser) {
     }));
   });
   await page.close();
+  console.log(`Scraping de ${platform} completado.`);
   return generatePersonalizedMessages(jobs, CV_SUMMARY);
 }
 
