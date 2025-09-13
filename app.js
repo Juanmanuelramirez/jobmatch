@@ -13,14 +13,19 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoader();
         try {
             const response = await fetch(`/api/jobs?platform=${platform}`);
+            
+            // Si la respuesta no es OK, intenta leer el error como JSON.
             if (!response.ok) {
-                const err = await response.json();
-                throw new Error(err.error || 'Error de red');
+                const errorData = await response.json().catch(() => ({ error: 'El servidor devolvió una respuesta inesperada.' }));
+                throw new Error(errorData.error);
             }
+            
             const jobs = await response.json();
             currentJobs = jobs;
             displayJobs(jobs);
+
         } catch (error) {
+            // Maneja el error, ya sea de la red o del JSON parseado
             displayError(`Error al cargar vacantes: ${error.message}`);
             console.error('Error al obtener las vacantes:', error);
         }
@@ -43,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <p class="company">${job.company}</p>
                 <p class="recruiter">
-                    Reclutador: <span class="not-found">${job.recruiter_name}</span>
+                    Reclutador: <span class="not-found">${job.recruiter_name || 'No encontrado'}</span>
                 </p>
                 <div class="actions">
                     <a href="${job.url}" target="_blank" class="apply-link">Ver Vacante</a>
@@ -54,26 +59,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     
-    // ... (El resto del archivo app.js y styles.css pueden permanecer igual, pero añado un pequeño estilo para el match score)
     const styleSheet = document.createElement("style");
     styleSheet.type = "text/css";
     styleSheet.innerText = `
         .job-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .match-score { background-color: #007bff; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.9em; font-weight: bold; }
+        .match-score { background-color: #007bff; color: white; padding: 5px 10px; border-radius: 15px; font-size: 0.9em; font-weight: bold; flex-shrink: 0; margin-left: 10px; }
     `;
     document.head.appendChild(styleSheet);
-
 
     const showLoader = () => {
         jobListingsContainer.innerHTML = '<div class="loader"></div>';
     };
 
     const displayError = (message) => {
-        jobListingsContainer.innerHTML = `<p style="text-align: center; color: #d9534f;">${message}</p>`;
+        jobListingsContainer.innerHTML = `<p style="text-align: center; color: #d9534f; background-color: #f8d7da; padding: 10px; border-radius: 5px; border: 1px solid #f5c6cb;">${message}</p>`;
     };
     
-    // El resto de la lógica de los event listeners del modal, etc., se mantiene igual.
-     const openMessageModal = (job) => {
+    const openMessageModal = (job) => {
         modalJobTitle.textContent = `Para: ${job.title} en ${job.company}`;
         modalMessage.value = job.message;
         modal.style.display = 'block';
@@ -114,6 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', (event) => { if (event.target == modal) { modal.style.display = 'none'; }});
     copyButton.addEventListener('click', copyMessageToClipboard);
 
-    fetchJobs(); // Carga inicial
+    fetchJobs();
 });
 
