@@ -1,9 +1,17 @@
 {
+  "name": "job-finder-jmrs",
+  "version": "1.0.0",
+  "description": "Buscador de vacantes personalizado",
+  "main": "index.js",
+  "scripts": {
+    "start": "node api/jobs.js"
+  },
   "engines": {
     "node": "20.x"
   },
   "dependencies": {
-    "@sparticuz/chromium": "^123.0.1",
-    "puppeteer-core": "^22.6.3"
+    "axios": "^1.6.8",
+    "cheerio": "^1.0.0-rc.12"
   }
 }
+
