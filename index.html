@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Job Board para Juan Manuel Ramírez</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <title>Buscador de Vacantes para Juan Manuel Ramírez</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
     <header>
         <div class="container">
-            <img src="https://placehold.co/100x100/EFEFEF/333?text=JMR" alt="Foto de Juan Manuel Ramírez" class="profile-pic">
-            <div class="header-text">
+            <div>
                 <h1>Buscador de Vacantes para Juan Manuel Ramírez</h1>
                 <p>Strategic Program Manager | Cloud & Agile Transformation Expert</p>
             </div>
@@ -20,27 +19,26 @@
     <main class="container">
         <h2>Mejores Vacantes Remotas para México</h2>
         <div class="tabs">
-            <button class="tab-button active" data-platform="linkedin">LinkedIn</button>
-            <button class="tab-button" data-platform="occ">OCCMundial</button>
+            <button class="tab-button active" data-platform="occ">OCCMundial</button>
             <button class="tab-button" data-platform="computrabajo">Computrabajo</button>
+            <button class="tab-button" data-platform="linkedin">LinkedIn (Simulado)</button>
         </div>
         <div id="job-listings">
-            <div class="loader"></div>
+            <p class="loading">Cargando vacantes, por favor espera...</p>
         </div>
     </main>
 
-    <!-- Modal para el mensaje personalizado -->
-    <div id="message-modal" class="modal">
+    <div id="modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
-            <h3>Mensaje Personalizado</h3>
-            <p id="modal-job-title"></p>
+            <h3 id="modal-title">Mensaje de Contacto Sugerido</h3>
+            <p id="modal-vacancy" class="vacancy-info"></p>
             <textarea id="modal-message" rows="12" readonly></textarea>
             <button id="copy-button">Copiar Mensaje</button>
+            <span id="copy-feedback"></span>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="/app.js"></script>
 </body>
 </html>
-
