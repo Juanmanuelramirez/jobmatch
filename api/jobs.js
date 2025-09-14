@@ -75,17 +75,45 @@ async function scrapeComputrabajo() {
     }
 }
 
-function getLinkedInJobs() {
-    console.log("Generando datos simulados para LinkedIn...");
-    const jobs = [
-        { title: "Technical Program Manager, Cloud Infrastructure", company: "Oracle", url: "https://www.linkedin.com/jobs/", recruiter_name: "Ana García", recruiter_email: "ana.garcia@example.com" },
-        { title: "Sr. Program Manager, AWS Professional Services", company: "Amazon Web Services (AWS)", url: "https://www.linkedin.com/jobs/", recruiter_name: "Luis Hernandez", recruiter_email: "luis.h@example.com" },
-        { title: "Agile Program Manager (FinTech)", company: "Stripe", url: "https://www.linkedin.com/jobs/", recruiter_name: "Sofia Castillo", recruiter_email: "sofia.c@example.com" },
-        { title: "Program Manager, Google Cloud", company: "Google", url: "https://www.linkedin.com/jobs/", recruiter_name: "David Morales", recruiter_email: "david.m@example.com" },
-        { title: "Remote Program Manager, IT", company: "Microsoft", url: "https://www.linkedin.com/jobs/", recruiter_name: "Elena Torres", recruiter_email: "elena.t@example.com" },
-    ];
-    // Mensaje en inglés para vacantes en inglés
-    return jobs.map(job => ({ ...job, message: `Dear ${job.recruiter_name || 'Hiring Team'} at ${job.company},\n\nI am writing to express my keen interest in the ${job.title} position I found on LinkedIn. As a Strategic Program Manager with over 10 years of experience in global cloud and Agile initiatives, my background in leading complex migrations to AWS and GCP aligns perfectly with this role's requirements.\n\nI have a proven track record of coordinating cross-functional teams across LATAM, India, and the U.S., enhancing CI/CD automation, and improving cloud governance. My certifications as an AWS Solutions Architect and Scrum Master further solidify my technical and methodological expertise.\n\nI am confident that my skills can bring significant value to your team. Thank you for your time and consideration.\n\nBest regards,\nJuan Manuel Ramírez Sosa`}));
+async function scrapeLinkedIn(apiKey) {
+    if (!apiKey) {
+        console.log("No se proporcionó API key para scraping de LinkedIn. Omitiendo.");
+        return [{ title: "Configuración Requerida", company: "Por favor, añade tu API Key de scraping en Vercel para ver vacantes reales de LinkedIn.", url: "#", message: "La API Key es necesaria para hacer scraping en vivo en LinkedIn." }];
+    }
+    console.log("Iniciando scraping de LinkedIn con API...");
+    try {
+        const targetUrl = 'https://www.linkedin.com/jobs/search?keywords=Program%20Manager&location=Mexico&f_TPR=r86400&f_WT=2&geoId=103332223&trk=public_jobs_jobs-search-bar_search-submit&position=1&pageNum=0';
+        // Usamos un servicio como ScraperAPI. Elige el que prefieras.
+        const apiUrl = `http://api.scraperapi.com?api_key=${apiKey}&url=${encodeURIComponent(targetUrl)}`;
+        
+        const { data } = await axios.get(apiUrl, { headers: { 'Accept-Encoding': 'gzip, deflate, br' }});
+        const $ = cheerio.load(data);
+        const jobs = [];
+
+        $('div.base-card').each((i, el) => {
+            if (jobs.length >= 10) return;
+
+            const title = $(el).find('h3.base-search-card__title').text().trim();
+            const company = $(el).find('h4.base-search-card__subtitle a').text().trim();
+            const jobUrl = $(el).find('a.base-card__full-link').attr('href');
+
+            if (title && company && jobUrl) {
+                 jobs.push({
+                    title,
+                    company,
+                    url: jobUrl.split('?')[0], // Limpiar URL
+                    recruiter_name: null, 
+                    recruiter_email: null,
+                    message: `Dear Hiring Team at ${company},\n\nI am writing to express my keen interest in the ${title} position I found on LinkedIn. As a Strategic Program Manager with over 10 years of experience in global cloud and Agile initiatives, my background in leading complex migrations to AWS and GCP aligns perfectly with this role's requirements.\n\nI have a proven track record of coordinating cross-functional teams across LATAM, India, and the U.S., enhancing CI/CD automation, and improving cloud governance. My certifications as an AWS Solutions Architect and Scrum Master further solidify my technical and methodological expertise.\n\nI am confident that my skills can bring significant value to your team. Thank you for your time and consideration.\n\nBest regards,\nJuan Manuel Ramírez Sosa`
+                });
+            }
+        });
+        console.log(`Scraping de LinkedIn finalizado. Se encontraron ${jobs.length} vacantes.`);
+        return jobs;
+    } catch (error) {
+        console.error("Error en scraping de LinkedIn:", error.response ? error.response.status : error.message);
+        return [{ title: "Error al Scrapear LinkedIn", company: "No se pudo obtener la información. Revisa tu API key o intenta más tarde.", url: "#", message: "Hubo un error al contactar el servicio de scraping. Por favor, verifica que tu API key sea correcta y que tu plan de servicio esté activo."}];
+    }
 }
 
 
@@ -98,27 +126,25 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // 1. Intentar leer desde el caché
         const cacheData = await readCache();
         if (cacheData && cacheData[platform]) {
             console.log(`Sirviendo datos para ${platform} desde el caché.`);
             return res.status(200).json(cacheData[platform]);
         }
 
-        // 2. Si el caché no existe o está expirado, hacer scraping
         console.log('Caché no encontrado o expirado. Realizando scraping en vivo...');
+        const scrapingApiKey = process.env.SCRAPING_API_KEY;
+
         const [occ, computrabajo, linkedin] = await Promise.all([
             scrapeOCC(),
             scrapeComputrabajo(),
-            getLinkedInJobs()
+            scrapeLinkedIn(scrapingApiKey)
         ]);
         
         const allJobs = { occ, computrabajo, linkedin };
 
-        // 3. Escribir los nuevos resultados al caché
         await writeCache(allJobs);
         
-        // 4. Devolver los resultados para la plataforma solicitada
         if (allJobs[platform]) {
             return res.status(200).json(allJobs[platform]);
         } else {
